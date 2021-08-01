@@ -7,76 +7,137 @@ const onlineUsers = require("../../onlineUsers");
 // include other user model so we have info on username/profile pic (don't include current user info)
 // TODO: for scalability, implement lazy loading
 router.get("/", async (req, res, next) => {
-  try {
-    if (!req.user) {
-      return res.sendStatus(401);
-    }
-    const userId = req.user.id;
-    const conversations = await Conversation.findAll({
-      where: {
-        [Op.or]: {
-          user1Id: userId,
-          user2Id: userId,
-        },
-      },
-      attributes: ["id"],
-      order: [[Message, "createdAt", "DESC"]],
-      include: [
-        { model: Message, order: ["createdAt", "DESC"] },
-        {
-          model: User,
-          as: "user1",
-          where: {
-            id: {
-              [Op.not]: userId,
+    try {
+        if (!req.user) {
+            return res.sendStatus(401);
+        }
+        const userId = req.user.id;
+        const conversations = await Conversation.findAll({
+            where: {
+                [Op.or]: {
+                    user1Id: userId,
+                    user2Id: userId,
+                },
             },
-          },
-          attributes: ["id", "username", "photoUrl"],
-          required: false,
-        },
-        {
-          model: User,
-          as: "user2",
-          where: {
-            id: {
-              [Op.not]: userId,
-            },
-          },
-          attributes: ["id", "username", "photoUrl"],
-          required: false,
-        },
-      ],
-    });
+            attributes: ["id"],
+            order: [[Message, "createdAt", "ASC"]],
+            include: [
+                { model: Message, order: ["createdAt", "DESC"] },
+                {
+                    model: User,
+                    as: "user1",
+                    where: {
+                        id: {
+                            [Op.not]: userId,
+                        },
+                    },
+                    attributes: ["id", "username", "photoUrl"],
+                    required: false,
+                },
+                {
+                    model: User,
+                    as: "user2",
+                    where: {
+                        id: {
+                            [Op.not]: userId,
+                        },
+                    },
+                    attributes: ["id", "username", "photoUrl"],
+                    required: false,
+                },
+            ],
+        });
 
-    for (let i = 0; i < conversations.length; i++) {
-      const convo = conversations[i];
-      const convoJSON = convo.toJSON();
+        for (let i = 0; i < conversations.length; i++) {
+            const convo = conversations[i];
+            const convoJSON = convo.toJSON();
 
-      // set a property "otherUser" so that frontend will have easier access
-      if (convoJSON.user1) {
-        convoJSON.otherUser = convoJSON.user1;
-        delete convoJSON.user1;
-      } else if (convoJSON.user2) {
-        convoJSON.otherUser = convoJSON.user2;
-        delete convoJSON.user2;
-      }
+            // set a property "otherUser" so that frontend will have easier access
+            if (convoJSON.user1) {
+                convoJSON.otherUser = convoJSON.user1;
+                delete convoJSON.user1;
+            } else if (convoJSON.user2) {
+                convoJSON.otherUser = convoJSON.user2;
+                delete convoJSON.user2;
+            }
 
-      // set property for online status of the other user
-      if (onlineUsers.includes(convoJSON.otherUser.id)) {
-        convoJSON.otherUser.online = true;
-      } else {
-        convoJSON.otherUser.online = false;
-      }
+            // set property for online status of the other user
+            if (onlineUsers.includes(convoJSON.otherUser.id)) {
+                convoJSON.otherUser.online = true;
+            } else {
+                convoJSON.otherUser.online = false;
+            }
 
-      // set properties for notification count and latest message preview
-      convoJSON.latestMessageText = convoJSON.messages[0].text;
-      conversations[i] = convoJSON;
+            // set properties for notification count and latest message preview
+            convoJSON.latestMessageText =
+                convoJSON.messages.length == 0
+                    ? ""
+                    : convoJSON.messages[convoJSON.messages.length - 1].text;
+            convoJSON.numUnread = convoJSON.messages.filter(
+                (msg) => !msg.read && msg.senderId !== userId
+            ).length;
+            convoJSON.lastRead = findLastRead(convoJSON.messages, userId);
+            conversations[i] = convoJSON;
+        }
+
+        res.json(conversations);
+    } catch (error) {
+        next(error);
     }
+});
 
-    res.json(conversations);
-  } catch (error) {
-    next(error);
-  }
+const findLastRead = (messages, userId) => {
+    for (var i = messages.length - 1; i >= 0; i--) {
+        // Last read is last seen message from other user or last message sent by current user
+        if (
+            (messages[i].read && messages[i].senderId === userId) ||
+            messages[i].senderId !== userId
+        ) {
+            return messages[i].id;
+        }
+    }
+    return -1;
+};
+
+// Marks all the messages in a given conversation as read
+// expects { messageIds, recipientId } in body
+router.post("/read", async (req, res, next) => {
+    try {
+        if (!req.user) {
+            return res.sendStatus(401);
+        }
+        const senderId = req.user.id;
+        const { messageIds, recipientId } = req.body;
+
+        // Check if conversation belongs to user;
+        const conversation = await Conversation.findConversation(
+            senderId,
+            recipientId
+        );
+
+        if (!conversation) {
+            return res.sendStatus(403);
+        }
+
+        // Update messages
+        const messages = await Message.update(
+            { read: true },
+            {
+                where: {
+                    id: {
+                        [Op.in]: messageIds,
+                    },
+                },
+            }
+        );
+
+        if (!messages) {
+            res.sendStatus(500);
+        }
+        res.sendStatus(200);
+    } catch (error) {
+        next(error);
+    }
 });
 
 module.exports = router;
