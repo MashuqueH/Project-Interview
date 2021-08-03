@@ -79,7 +79,6 @@ export const fetchConversations = () => async (dispatch) => {
 };
 
 const saveMessage = async (body) => {
-  delete body["conversationId"];
   const { data } = await axios.post("/api/messages", body);
   return data;
 };

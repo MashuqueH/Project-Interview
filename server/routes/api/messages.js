@@ -1,4 +1,5 @@
 const router = require("express").Router();
+const { Op } = require("sequelize");
 const { Conversation, Message } = require("../../db/models");
 const onlineUsers = require("../../onlineUsers");
 
@@ -10,8 +11,32 @@ router.post("/", async (req, res, next) => {
     }
 
     const senderId = req.user.id;
-    const { recipientId, text, sender } = req.body;
+    const { recipientId, text, conversationId, sender } = req.body;
 
+    // if we already know conversation id, we can save time and just add it to message and return
+    if (conversationId) {
+      // Check if conversation belongs to user
+      const conversation = await Conversation.findOne({
+        where: {
+          id: conversationId,
+          user1Id: {
+            [Op.or]: [senderId, recipientId],
+          },
+          user2Id: {
+            [Op.or]: [senderId, recipientId],
+          },
+        },
+      });
+
+      if (!conversation) {
+        return res.sendStatus(403);
+      }
+
+      const message = await Message.create({ senderId, text, conversationId });
+      return res.json({ message, sender });
+    }
+
+    // if we don't have conversation id, find a conversation to make sure it doesn't already exist
     let conversation = await Conversation.findConversation(
       senderId,
       recipientId
