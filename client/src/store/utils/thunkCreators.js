@@ -70,10 +70,18 @@ export const logout = (id) => async (dispatch) => {
 
 // CONVERSATIONS THUNK CREATORS
 
+// Joins a room for each conversation
+const joinConversationRooms = (conversationIds) => {
+  socket.emit("join-conversation-rooms", {
+    conversationIds,
+  });
+};
+
 export const fetchConversations = () => async (dispatch) => {
   try {
     const { data } = await axios.get("/api/conversations");
     dispatch(gotConversations(data));
+    joinConversationRooms(data.map((convo) => convo.id.toString()));
   } catch (error) {
     console.error(error);
   }
@@ -86,6 +94,7 @@ const saveMessage = async (body) => {
 
 const sendMessage = (data, body) => {
   socket.emit("new-message", {
+    conversationId: body.conversationId?.toString(),
     message: data.message,
     recipientId: body.recipientId,
     sender: data.sender,
@@ -97,13 +106,14 @@ const sendMessage = (data, body) => {
 export const postMessage = (body) => async (dispatch) => {
   try {
     const data = await saveMessage(body);
-
     if (!body.conversationId) {
       dispatch(addConversation(body.recipientId, data.message));
+      // Join new conversation room
+      console.log(data.message.conversationId);
+      joinConversationRooms([data.message.conversationId.toString()]);
     } else {
       dispatch(setNewMessage(data.message));
     }
-
     sendMessage(data, body);
   } catch (error) {
     console.error(error);
@@ -130,9 +140,7 @@ export const readMessages = (conversation) => async (dispatch, getState) => {
     let userId = getState().user.id;
     let recipientId = conversation.otherUser.id;
 
-    // Find unread messages
     let messageIds = [];
-
     for (let i = conversation.messages.length - 1; i >= 0; i--) {
       let message = conversation.messages[i];
       if (

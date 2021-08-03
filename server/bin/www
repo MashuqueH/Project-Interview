@@ -30,8 +30,31 @@ const server = http.createServer(app);
  */
 
 const io = require("socket.io")(server);
+const jwt = require("jsonwebtoken");
+
+// io.use((socket, next) => {
+//   // if (!socket.handshake.auth || !(token in socket.handshake.auth)) {
+//   //   console.log("no token");
+//   //   next(new Error("Missing token. Unauthorized"));
+//   // }
+//   // const token = socket.handshake.auth.token;
+//   // jwt.verify(token, process.env.SESSION_SECRET, (err) => {
+//   //   if (err) {
+//   //     console.log("invalid token");
+//   //     return next(new Error("Invalid token. Unauthorized"));
+//   //   }
+//   //   console.log("valid token");
+//   //   next();
+//   // });
+//   console.log("here");
+//   next(new Error("Missing token. Unauthorized"));
+// });
 
 io.on("connection", (socket) => {
+  socket.on("join-conversation-rooms", (data) => {
+    socket.join(data.conversationIds);
+  });
+
   socket.on("go-online", (id) => {
     if (!onlineUsers.includes(id)) {
       onlineUsers.push(id);
@@ -41,14 +64,14 @@ io.on("connection", (socket) => {
   });
 
   socket.on("new-message", (data) => {
-    socket.broadcast.emit("new-message", {
+    socket.broadcast.to(data.conversationId).emit("new-message", {
       message: data.message,
       sender: data.sender,
     });
   });
 
   socket.on("read-messages", (data) => {
-    socket.broadcast.emit("read-messages", {
+    socket.broadcast.to(data.conversationId.toString()).emit("read-messages", {
       conversationId: data.conversationId,
       messageIds: data.messageIds,
     });
