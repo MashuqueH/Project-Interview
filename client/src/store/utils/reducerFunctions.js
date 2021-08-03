@@ -8,7 +8,7 @@ export const addMessageToStore = (state, payload) => {
       messages: [message],
     };
     newConvo.latestMessageText = message.text;
-    newConvo.numUnread = 0;
+    newConvo.numUnread = newConvo.messages.length;
     return [newConvo, ...state];
   }
 

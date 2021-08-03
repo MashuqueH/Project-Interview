@@ -50,6 +50,12 @@ export const login = (credentials) => async (dispatch) => {
     const { data } = await axios.post("/auth/login", credentials);
     await localStorage.setItem("messenger-token", data.token);
     dispatch(gotUser(data));
+
+    // Reconnect with new token
+    socket.disconnect();
+    socket.auth.token = data.token;
+    socket.connect();
+
     socket.emit("go-online", data.id);
   } catch (error) {
     console.error(error);
@@ -71,17 +77,10 @@ export const logout = (id) => async (dispatch) => {
 // CONVERSATIONS THUNK CREATORS
 
 // Joins a room for each conversation
-const joinConversationRooms = (conversationIds) => {
-  socket.emit("join-conversation-rooms", {
-    conversationIds,
-  });
-};
-
 export const fetchConversations = () => async (dispatch) => {
   try {
     const { data } = await axios.get("/api/conversations");
     dispatch(gotConversations(data));
-    joinConversationRooms(data.map((convo) => convo.id.toString()));
   } catch (error) {
     console.error(error);
   }
@@ -94,7 +93,7 @@ const saveMessage = async (body) => {
 
 const sendMessage = (data, body) => {
   socket.emit("new-message", {
-    conversationId: body.conversationId?.toString(),
+    conversationId: body.conversationId,
     message: data.message,
     recipientId: body.recipientId,
     sender: data.sender,
@@ -108,9 +107,6 @@ export const postMessage = (body) => async (dispatch) => {
     const data = await saveMessage(body);
     if (!body.conversationId) {
       dispatch(addConversation(body.recipientId, data.message));
-      // Join new conversation room
-      console.log(data.message.conversationId);
-      joinConversationRooms([data.message.conversationId.toString()]);
     } else {
       dispatch(setNewMessage(data.message));
     }
@@ -127,8 +123,9 @@ const markConversationAsRead = async (recipientId, messageIds) => {
   });
 };
 
-const sendReadMessages = (conversationId, messageIds) => {
+const sendReadMessages = (recipientId, conversationId, messageIds) => {
   socket.emit("read-messages", {
+    recipientId,
     conversationId,
     messageIds,
   });
@@ -157,7 +154,7 @@ export const readMessages = (conversation) => async (dispatch, getState) => {
     if (messageIds.length > 0) {
       await markConversationAsRead(recipientId, messageIds);
       dispatch(markAsRead(conversation.id, messageIds));
-      sendReadMessages(conversation.id, messageIds);
+      sendReadMessages(conversation.otherUser.id, conversation.id, messageIds);
     }
   } catch (error) {
     console.error(error);
