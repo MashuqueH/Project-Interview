@@ -29,7 +29,10 @@ const ActiveChat = (props) => {
   const [currentConversation, setCurrentConversation] = useState(null);
 
   useEffect(() => {
-    if (conversation && activeConversation === currentConversation) {
+    if (
+      conversation?.numUnread > 0 &&
+      activeConversation === currentConversation
+    ) {
       props.readMessages(conversation);
     }
   }, [activeConversation, currentConversation, conversation, props]);

@@ -1,6 +1,6 @@
 const router = require("express").Router();
-const { Conversation, Message } = require("../../db/models");
 const { Op } = require("sequelize");
+const { Conversation, Message } = require("../../db/models");
 const onlineUsers = require("../../onlineUsers");
 
 // expects {recipientId, text, conversationId } in body (conversationId will be null if no conversation exists yet)
@@ -9,8 +9,32 @@ router.post("/", async (req, res, next) => {
     if (!req.user) {
       return res.sendStatus(401);
     }
+
     const senderId = req.user.id;
-    const { recipientId, text, sender } = req.body;
+    const { recipientId, text, conversationId, sender } = req.body;
+
+    // if we already know conversation id, we can save time and just add it to message and return
+    if (conversationId) {
+      // Check if conversation belongs to user
+      const conversation = await Conversation.findOne({
+        where: {
+          id: conversationId,
+          user1Id: {
+            [Op.or]: [senderId, recipientId],
+          },
+          user2Id: {
+            [Op.or]: [senderId, recipientId],
+          },
+        },
+      });
+
+      if (!conversation) {
+        return res.sendStatus(403);
+      }
+
+      const message = await Message.create({ senderId, text, conversationId });
+      return res.json({ message, sender });
+    }
 
     // if we don't have conversation id, find a conversation to make sure it doesn't already exist
     let conversation = await Conversation.findConversation(
@@ -47,13 +71,20 @@ router.patch("/read", async (req, res, next) => {
       return res.sendStatus(401);
     }
     const senderId = req.user.id;
-    const { messageIds, recipientId } = req.body;
+    const { recipientId, conversationId } = req.body;
 
     // Check if conversation belongs to user;
-    const conversation = await Conversation.findConversation(
-      senderId,
-      recipientId
-    );
+    const conversation = await Conversation.findOne({
+      where: {
+        id: conversationId,
+        user1Id: {
+          [Op.or]: [senderId, recipientId],
+        },
+        user2Id: {
+          [Op.or]: [senderId, recipientId],
+        },
+      },
+    });
 
     if (!conversation) {
       return res.sendStatus(403);
@@ -64,17 +95,19 @@ router.patch("/read", async (req, res, next) => {
       { read: true },
       {
         where: {
-          id: {
-            [Op.in]: messageIds,
-          },
+          conversationId,
+          senderId: recipientId,
+          read: false,
         },
+        returning: true,
       }
     );
 
     if (!messages) {
-      res.sendStatus(500);
+      res.sendStatus(404);
     }
-    res.sendStatus(200);
+    let updatedMessages = messages[1].map((message) => message.dataValues);
+    res.json(updatedMessages);
   } catch (error) {
     next(error);
   }

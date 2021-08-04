@@ -7,10 +7,10 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: "10%",
+    marginRight: theme.spacing(),
   },
   background: {
-    backgroundColor: " #3A8DFF",
+    backgroundColor: "#3A8DFF",
     borderRadius: "50%",
     textAlign: "center",
     display: "flex",
@@ -21,7 +21,7 @@ const useStyles = makeStyles((theme) => ({
   },
   text: {
     color: "white",
-    fontSize: 14,
+    fontSize: theme.typography,
     fontWeight: "bolder",
   },
 }));

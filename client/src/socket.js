@@ -37,7 +37,7 @@ socket.on("new-message", (data) => {
 });
 
 socket.on("read-messages", (data) => {
-  store.dispatch(markAsRead(data.conversationId, data.messageIds));
+  store.dispatch(markAsRead(data.conversationId, data.messages));
 });
 
 export default socket;

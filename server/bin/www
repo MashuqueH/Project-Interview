@@ -73,7 +73,7 @@ io.on("connection", (socket) => {
   socket.on("read-messages", (data) => {
     socket.broadcast.to(data.recipientId.toString()).emit("read-messages", {
       conversationId: data.conversationId,
-      messageIds: data.messageIds,
+      messages: data.messages,
     });
   });
 

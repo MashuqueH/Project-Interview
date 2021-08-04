@@ -20,7 +20,7 @@ router.get("/", async (req, res, next) => {
         },
       },
       attributes: ["id"],
-      order: [[Message, "createdAt", "ASC"]],
+      order: [[Message, "createdAt", "DESC"]],
       include: [
         { model: Message, order: ["createdAt", "DESC"] },
         {
@@ -52,6 +52,15 @@ router.get("/", async (req, res, next) => {
       const convo = conversations[i];
       const convoJSON = convo.toJSON();
 
+      convoJSON.lastRead = convoJSON.messages.find(
+        (message) =>
+          (message.read && message.senderId === userId) ||
+          message.senderId !== userId
+      )?.id;
+
+      // Sort messages by createdAt
+      convoJSON.messages = convoJSON.messages.reverse();
+
       // set a property "otherUser" so that frontend will have easier access
       if (convoJSON.user1) {
         convoJSON.otherUser = convoJSON.user1;
@@ -70,13 +79,12 @@ router.get("/", async (req, res, next) => {
 
       // set properties for notification count and latest message preview
       convoJSON.latestMessageText =
-        convoJSON.messages.length == 0
-          ? ""
-          : convoJSON.messages[convoJSON.messages.length - 1].text;
+        convoJSON.messages?.[convoJSON.messages.length - 1].text;
+
       convoJSON.numUnread = convoJSON.messages.filter(
         (msg) => !msg.read && msg.senderId !== userId
       ).length;
-      convoJSON.lastRead = findLastRead(convoJSON.messages, userId);
+
       conversations[i] = convoJSON;
     }
 
@@ -85,18 +93,5 @@ router.get("/", async (req, res, next) => {
     next(error);
   }
 });
-
-const findLastRead = (messages, userId) => {
-  for (var i = messages.length - 1; i >= 0; i--) {
-    // Last read is last seen message from other user or last message sent by current user
-    if (
-      (messages[i].read && messages[i].senderId === userId) ||
-      messages[i].senderId !== userId
-    ) {
-      return messages[i].id;
-    }
-  }
-  return -1;
-};
 
 module.exports = router;
