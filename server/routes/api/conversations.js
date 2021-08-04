@@ -58,8 +58,6 @@ router.get("/", async (req, res, next) => {
           message.senderId !== userId
       )?.id;
 
-      console.log(convoJSON.lastRead);
-
       // Sort messages by createdAt
       convoJSON.messages = convoJSON.messages.reverse();
 
