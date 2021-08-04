@@ -7,25 +7,37 @@ import {
   markAsRead,
 } from "./store/conversations";
 
-const socket = io(window.location.origin);
+const socket = io(window.location.origin, {
+  auth: {
+    token: localStorage.getItem("messenger-token"),
+  },
+});
+
+socket.on("connect_error", async (err) => {
+  if (err.message === "Auth Error") {
+    // Delete messsenger token
+    localStorage.removeItem("messenger-token");
+  }
+  console.error(err.message);
+});
 
 socket.on("connect", () => {
   console.log("connected to server");
+});
 
-  socket.on("add-online-user", (id) => {
-    store.dispatch(addOnlineUser(id));
-  });
+socket.on("add-online-user", (id) => {
+  store.dispatch(addOnlineUser(id));
+});
 
-  socket.on("remove-offline-user", (id) => {
-    store.dispatch(removeOfflineUser(id));
-  });
-  socket.on("new-message", (data) => {
-    store.dispatch(setNewMessage(data.message, data.sender));
-  });
+socket.on("remove-offline-user", (id) => {
+  store.dispatch(removeOfflineUser(id));
+});
+socket.on("new-message", (data) => {
+  store.dispatch(setNewMessage(data.message, data.sender));
+});
 
-  socket.on("read-messages", (data) => {
-    store.dispatch(markAsRead(data.conversationId, data.messages));
-  });
+socket.on("read-messages", (data) => {
+  store.dispatch(markAsRead(data.conversationId, data.messages));
 });
 
 export default socket;
