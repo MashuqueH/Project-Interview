@@ -14,12 +14,11 @@ const socket = io(window.location.origin, {
 });
 
 socket.on("connect_error", async (err) => {
-  console.log(err.message === "Auth Error");
   if (err.message === "Auth Error") {
     // Delete messsenger token
     localStorage.removeItem("messenger-token");
   }
-  console.log(err.message);
+  console.error(err.message);
 });
 
 socket.on("connect", () => {

@@ -56,7 +56,7 @@ io.use(function (socket, next) {
 
 io.on("connection", (socket) => {
   socket.on("go-online", (id) => {
-    if (!(id in onlineUsers)) {
+    if (!onlineUsers[id]) {
       onlineUsers[id] = true;
     }
     // send the user who just went online to everyone else who is already online
