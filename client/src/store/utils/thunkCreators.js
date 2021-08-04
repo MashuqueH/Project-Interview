@@ -110,52 +110,29 @@ export const postMessage = (body) => async (dispatch) => {
   }
 };
 
-const markConversationAsRead = async (
-  conversationId,
-  recipientId,
-  messageIds
-) => {
-  await axios.patch("/api/messages/read", {
+const markConversationAsRead = async (conversationId, recipientId) => {
+  const { data } = await axios.patch("/api/messages/read", {
     conversationId,
     recipientId,
-    messageIds,
   });
+  return data;
 };
 
-const sendReadMessages = (conversationId, messageIds) => {
+const sendReadMessages = (conversationId, messages) => {
   socket.emit("read-messages", {
     conversationId,
-    messageIds,
+    messages,
   });
 };
 
 // Read messages in a given conversation
-export const readMessages = (conversation) => async (dispatch, getState) => {
+export const readMessages = (conversation) => async (dispatch) => {
   try {
-    let userId = getState().user.id;
     let recipientId = conversation.otherUser.id;
 
-    // Find unread messages
-    let messageIds = [];
-
-    for (let i = conversation.messages.length - 1; i >= 0; i--) {
-      let message = conversation.messages[i];
-      if (
-        (message.read && message.senderId !== userId) ||
-        message.senderId === userId
-      ) {
-        break;
-      }
-      if (!message.read && message.senderId !== userId) {
-        messageIds.unshift(message.id);
-      }
-    }
-
-    if (messageIds.length > 0) {
-      await markConversationAsRead(conversation.id, recipientId, messageIds);
-      dispatch(markAsRead(conversation.id, messageIds));
-      sendReadMessages(conversation.id, messageIds);
-    }
+    const data = await markConversationAsRead(conversation.id, recipientId);
+    dispatch(markAsRead(conversation.id, data));
+    sendReadMessages(conversation.id, data);
   } catch (error) {
     console.error(error);
   }

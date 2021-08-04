@@ -62,7 +62,7 @@ async function seed() {
     conversationId: chiumboConvo.id,
     senderId: chiumbo.id,
     text: "Sure! What time?",
-    read: true,
+    read: false,
   });
 
   const hualing = await User.create({
