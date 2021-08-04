@@ -76,7 +76,12 @@ router.get("/", async (req, res, next) => {
       convoJSON.numUnread = convoJSON.messages.filter(
         (msg) => !msg.read && msg.senderId !== userId
       ).length;
-      convoJSON.lastRead = findLastRead(convoJSON.messages, userId);
+
+      convoJSON.last = convoJSON.messages.find(
+        (message) =>
+          (message.read && message.senderId === userId) ||
+          message.senderId !== userId
+      );
       conversations[i] = convoJSON;
     }
 
@@ -85,18 +90,5 @@ router.get("/", async (req, res, next) => {
     next(error);
   }
 });
-
-const findLastRead = (messages, userId) => {
-  for (var i = messages.length - 1; i >= 0; i--) {
-    // Last read is last seen message from other user or last message sent by current user
-    if (
-      (messages[i].read && messages[i].senderId === userId) ||
-      messages[i].senderId !== userId
-    ) {
-      return messages[i].id;
-    }
-  }
-  return -1;
-};
 
 module.exports = router;

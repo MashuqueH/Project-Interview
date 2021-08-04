@@ -47,13 +47,20 @@ router.patch("/read", async (req, res, next) => {
       return res.sendStatus(401);
     }
     const senderId = req.user.id;
-    const { messageIds, recipientId } = req.body;
+    const { messageIds, recipientId, conversationId } = req.body;
 
     // Check if conversation belongs to user;
-    const conversation = await Conversation.findConversation(
-      senderId,
-      recipientId
-    );
+    const conversation = await Conversation.findOne({
+      where: {
+        id: conversationId,
+        user1Id: {
+          [Op.or]: [senderId, recipientId],
+        },
+        user2Id: {
+          [Op.or]: [senderId, recipientId],
+        },
+      },
+    });
 
     if (!conversation) {
       return res.sendStatus(403);
@@ -72,7 +79,7 @@ router.patch("/read", async (req, res, next) => {
     );
 
     if (!messages) {
-      res.sendStatus(500);
+      res.sendStatus(404);
     }
     res.sendStatus(200);
   } catch (error) {

@@ -18,10 +18,7 @@ export const addMessageToStore = (state, payload) => {
       convoCopy.messages.push(message);
       convoCopy.latestMessageText = message.text;
       // Only update if receiver and sender are not the same
-      convoCopy.numUnread =
-        convo.otherUser.id !== message.senderId
-          ? convoCopy.numUnread
-          : convoCopy.numUnread + 1;
+      if (convo.otherUser.id === message.senderId) convoCopy.numUnread += 1;
       return convoCopy;
     } else {
       return convo;

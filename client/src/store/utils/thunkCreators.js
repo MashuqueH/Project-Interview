@@ -110,8 +110,13 @@ export const postMessage = (body) => async (dispatch) => {
   }
 };
 
-const markConversationAsRead = async (recipientId, messageIds) => {
+const markConversationAsRead = async (
+  conversationId,
+  recipientId,
+  messageIds
+) => {
   await axios.patch("/api/messages/read", {
+    conversationId,
     recipientId,
     messageIds,
   });
@@ -147,7 +152,7 @@ export const readMessages = (conversation) => async (dispatch, getState) => {
     }
 
     if (messageIds.length > 0) {
-      await markConversationAsRead(recipientId, messageIds);
+      await markConversationAsRead(conversation.id, recipientId, messageIds);
       dispatch(markAsRead(conversation.id, messageIds));
       sendReadMessages(conversation.id, messageIds);
     }
