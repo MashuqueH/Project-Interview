@@ -1,14 +1,15 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import { Box } from "@material-ui/core";
 import { Input, Header, Messages } from "./index";
 import { connect } from "react-redux";
+import { readMessages } from "../../store/utils/thunkCreators";
 
 const useStyles = makeStyles(() => ({
   root: {
     display: "flex",
     flexGrow: 8,
-    flexDirection: "column"
+    flexDirection: "column",
   },
   chatContainer: {
     marginLeft: 41,
@@ -16,18 +17,33 @@ const useStyles = makeStyles(() => ({
     display: "flex",
     flexDirection: "column",
     flexGrow: 1,
-    justifyContent: "space-between"
-  }
+    justifyContent: "space-between",
+  },
 }));
 
 const ActiveChat = (props) => {
   const classes = useStyles();
-  const { user } = props;
-  const conversation = props.conversation || {};
+  const { user, activeConversation } = props;
+  const conversation = props.conversation;
+
+  const [currentConversation, setCurrentConversation] = useState(null);
+
+  useEffect(() => {
+    if (
+      conversation?.numUnread > 0 &&
+      activeConversation === currentConversation
+    ) {
+      props.readMessages(conversation);
+    }
+  }, [activeConversation, currentConversation, conversation, props]);
+
+  useEffect(() => {
+    setCurrentConversation(activeConversation);
+  }, [activeConversation, currentConversation]);
 
   return (
     <Box className={classes.root}>
-      {conversation.otherUser && (
+      {conversation?.otherUser && (
         <>
           <Header
             username={conversation.otherUser.username}
@@ -38,6 +54,7 @@ const ActiveChat = (props) => {
               messages={conversation.messages}
               otherUser={conversation.otherUser}
               userId={user.id}
+              lastRead={conversation.lastRead}
             />
             <Input
               otherUser={conversation.otherUser}
@@ -54,12 +71,22 @@ const ActiveChat = (props) => {
 const mapStateToProps = (state) => {
   return {
     user: state.user,
-    conversation:
-      state.conversations &&
-      state.conversations.find(
-        (conversation) => conversation.otherUser.username === state.activeConversation
-      )
+    activeConversation: state.activeConversation,
+    conversation: state.conversations
+      ? state.conversations.find(
+          (conversation) =>
+            conversation.otherUser.username === state.activeConversation
+        )
+      : {},
   };
 };
 
-export default connect(mapStateToProps, null)(ActiveChat);
+const mapDispatchToProps = (dispatch) => {
+  return {
+    readMessages: (senderId) => {
+      dispatch(readMessages(senderId));
+    },
+  };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(ActiveChat);

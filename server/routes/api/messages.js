@@ -63,4 +63,54 @@ router.post("/", async (req, res, next) => {
   }
 });
 
+// Marks all the messages in a given conversation as read
+// expects { messageIds, recipientId } in body
+router.patch("/read", async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.sendStatus(401);
+    }
+    const senderId = req.user.id;
+    const { recipientId, conversationId } = req.body;
+
+    // Check if conversation belongs to user;
+    const conversation = await Conversation.findOne({
+      where: {
+        id: conversationId,
+        user1Id: {
+          [Op.or]: [senderId, recipientId],
+        },
+        user2Id: {
+          [Op.or]: [senderId, recipientId],
+        },
+      },
+    });
+
+    if (!conversation) {
+      return res.sendStatus(403);
+    }
+
+    // Update messages
+    const messages = await Message.update(
+      { read: true },
+      {
+        where: {
+          conversationId,
+          senderId: recipientId,
+          read: false,
+        },
+        returning: true,
+      }
+    );
+
+    if (!messages) {
+      res.sendStatus(404);
+    }
+    let updatedMessages = messages[1].map((message) => message.dataValues);
+    res.json(updatedMessages);
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;
