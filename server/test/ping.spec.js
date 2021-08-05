@@ -14,9 +14,6 @@ describe("/POST ping", () => {
       .send({ teamName: "Shums" })
       .end((err, res) => {
         res.should.have.status(404);
-        // res.body.should.have
-        //   .property("response")
-        //   .eql("Shums is not part of the team. Modify your .env");
         done();
       });
   });

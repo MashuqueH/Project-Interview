@@ -26,7 +26,7 @@ describe("message", function () {
   });
 
   describe("/POST missing token", () => {
-    it("it should return 401", (done) => {
+    it("should return 401", (done) => {
       chai
         .request(url)
         .post("/api/messages")
@@ -38,7 +38,7 @@ describe("message", function () {
   });
 
   describe("/POST missing body", () => {
-    it("it should return 500", (done) => {
+    it("should return 500", (done) => {
       chai
         .request(url)
         .post("/api/messages")
@@ -51,7 +51,7 @@ describe("message", function () {
   });
 
   describe("/POST user does not belong to conversation", () => {
-    it("it should return 403", (done) => {
+    it("should return 403", (done) => {
       chai
         .request(url)
         .post("/api/messages")
@@ -69,7 +69,7 @@ describe("message", function () {
   });
 
   describe("/POST user does belong to conversation", () => {
-    it("it should return 200", (done) => {
+    it("should return 200", (done) => {
       chai
         .request(url)
         .post("/api/messages")
@@ -91,7 +91,7 @@ describe("message", function () {
   });
 
   describe("/PATCH read messages", () => {
-    it("it should return 200", (done) => {
+    it("should return 200", (done) => {
       chai
         .request(url)
         .patch("/api/messages/read")
@@ -111,7 +111,7 @@ describe("message", function () {
   });
 
   describe("/PATCH read messages invalid conversation", () => {
-    it("it should return 403", (done) => {
+    it("should return 403", (done) => {
       chai
         .request(url)
         .patch("/api/messages/read")

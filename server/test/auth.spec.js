@@ -3,7 +3,7 @@ chai.should();
 
 const url = "http://localhost:3001";
 describe("/POST valid login", () => {
-  it("it should return 200", (done) => {
+  it("should return 200", (done) => {
     chai
       .request(url)
       .post(`/auth/login`)
@@ -18,7 +18,7 @@ describe("/POST valid login", () => {
 });
 
 describe("/POST invalid username", () => {
-  it("it should return 401", (done) => {
+  it("should return 401", (done) => {
     chai
       .request("http://localhost:3001")
       .post(`/auth/login`)
@@ -34,7 +34,7 @@ describe("/POST invalid username", () => {
 });
 
 describe("/POST invalid password", () => {
-  it("it should return 401", (done) => {
+  it("should return 401", (done) => {
     chai
       .request("http://localhost:3001")
       .post(`/auth/login`)
@@ -50,7 +50,7 @@ describe("/POST invalid password", () => {
 });
 
 describe("/POST missing username", () => {
-  it("it should return 400", (done) => {
+  it("should return 400", (done) => {
     chai
       .request("http://localhost:3001")
       .post(`/auth/login`)
@@ -66,7 +66,7 @@ describe("/POST missing username", () => {
 });
 
 describe("/POST missing password", () => {
-  it("it should return 400", (done) => {
+  it("should return 400", (done) => {
     chai
       .request("http://localhost:3001")
       .post(`/auth/login`)
@@ -82,7 +82,7 @@ describe("/POST missing password", () => {
 });
 
 describe("/POST missing password", () => {
-  it("it should return 400", (done) => {
+  it("should return 400", (done) => {
     chai
       .request("http://localhost:3001")
       .post(`/auth/login`)
@@ -98,7 +98,7 @@ describe("/POST missing password", () => {
 });
 
 describe("/POST invalid registration", () => {
-  it("it should return 400", (done) => {
+  it("should return 400", (done) => {
     chai
       .request("http://localhost:3001")
       .post(`/auth/register`)
@@ -114,7 +114,7 @@ describe("/POST invalid registration", () => {
 });
 
 describe("/POST user already exists registration", () => {
-  it("it should return 401", (done) => {
+  it("should return 401", (done) => {
     chai
       .request("http://localhost:3001")
       .post(`/auth/register`)
@@ -132,7 +132,7 @@ describe("/POST user already exists registration", () => {
 });
 
 describe("/DELETE logout", () => {
-  it("it should return 204", (done) => {
+  it("should return 204", (done) => {
     chai
       .request("http://localhost:3001")
       .delete(`/auth/logout`)
@@ -144,7 +144,7 @@ describe("/DELETE logout", () => {
 });
 
 describe("/GET user", () => {
-  it("it should return 200", (done) => {
+  it("should return 200", (done) => {
     chai
       .request("http://localhost:3001")
       .get(`/auth/user`)
@@ -157,7 +157,7 @@ describe("/GET user", () => {
 });
 
 describe("/GET missing user", () => {
-  it("it should return 200", (done) => {
+  it("should return 200", (done) => {
     chai
       .request("http://localhost:3001")
       .get(`/auth/user`)

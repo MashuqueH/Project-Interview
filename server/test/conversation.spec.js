@@ -27,7 +27,7 @@ describe("conversations", function () {
   });
 
   describe("/GET missing token", () => {
-    it("it should return 401", (done) => {
+    it("should return 401", (done) => {
       chai
         .request(url)
         .get("/api/conversations")
@@ -39,7 +39,7 @@ describe("conversations", function () {
   });
 
   describe("/GET conversations", () => {
-    it("it should return 500", (done) => {
+    it("should return 500", (done) => {
       chai
         .request(url)
         .get("/api/conversations")
