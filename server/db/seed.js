@@ -44,7 +44,7 @@ async function seed() {
     conversationId: santaigoConvo.id,
     senderId: santiago.id,
     text: "Share photo of your city, please",
-    read: true,
+    read: false,
   });
 
   const chiumbo = await User.create({
@@ -64,6 +64,20 @@ async function seed() {
     text: "Sure! What time?",
     read: false,
   });
+
+  const santaigoConvo2 = await Conversation.create({
+    user1Id: santiago.id,
+    user2Id: chiumbo.id,
+  });
+
+  for (let i = 0; i < 10; i++) {
+    await Message.create({
+      conversationId: santaigoConvo2.id,
+      senderId: chiumbo.id,
+      text: "a test message",
+      read: false,
+    });
+  }
 
   const hualing = await User.create({
     username: "hualing",
@@ -139,3 +153,5 @@ async function runSeed() {
 if (module === require.main) {
   runSeed();
 }
+
+module.exports = seed;

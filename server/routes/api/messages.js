@@ -64,7 +64,7 @@ router.post("/", async (req, res, next) => {
 });
 
 // Marks all the messages in a given conversation as read
-// expects { messageIds, recipientId } in body
+// expects { recipientId, conversationId } in body
 router.patch("/read", async (req, res, next) => {
   try {
     if (!req.user) {
