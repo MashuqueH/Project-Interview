@@ -1,11 +1,12 @@
 const chai = require("chai");
+const app = require("../bin/www");
+
 chai.should();
 
-const url = "http://localhost:3001";
-describe("/POST valid login", () => {
-  it("should return 200", (done) => {
+describe("/POST /auth/login", () => {
+  it("should return 200 when user provides valid login info", (done) => {
     chai
-      .request(url)
+      .request(app)
       .post(`/auth/login`)
       .send({ username: "thomas", password: "123456" })
       .end((err, res) => {
@@ -17,10 +18,10 @@ describe("/POST valid login", () => {
   });
 });
 
-describe("/POST invalid username", () => {
-  it("should return 401", (done) => {
+describe("/POST /auth/login", () => {
+  it("should return 401 when user provides an invalid username", (done) => {
     chai
-      .request("http://localhost:3001")
+      .request(app)
       .post(`/auth/login`)
       .send({ username: "thomas1", password: "1234567" })
       .end((err, res) => {
@@ -33,10 +34,10 @@ describe("/POST invalid username", () => {
   });
 });
 
-describe("/POST invalid password", () => {
-  it("should return 401", (done) => {
+describe("/POST /auth/login", () => {
+  it("should return 401 when user provides an incorrect password", (done) => {
     chai
-      .request("http://localhost:3001")
+      .request(app)
       .post(`/auth/login`)
       .send({ username: "thomas", password: "1234567" })
       .end((err, res) => {
@@ -49,10 +50,10 @@ describe("/POST invalid password", () => {
   });
 });
 
-describe("/POST missing username", () => {
-  it("should return 400", (done) => {
+describe("/POST /auth/login", () => {
+  it("should return 400 when username is missing from post body", (done) => {
     chai
-      .request("http://localhost:3001")
+      .request(app)
       .post(`/auth/login`)
       .send({ password: "1234567" })
       .end((err, res) => {
@@ -65,10 +66,10 @@ describe("/POST missing username", () => {
   });
 });
 
-describe("/POST missing password", () => {
-  it("should return 400", (done) => {
+describe("/POST /auth/login", () => {
+  it("should return 400 when password is missing from post body", (done) => {
     chai
-      .request("http://localhost:3001")
+      .request(app)
       .post(`/auth/login`)
       .send({ username: "thomas" })
       .end((err, res) => {
@@ -81,26 +82,10 @@ describe("/POST missing password", () => {
   });
 });
 
-describe("/POST missing password", () => {
-  it("should return 400", (done) => {
+describe("/POST /auth/register", () => {
+  it("should return 400 when user does not provide an email for registration", (done) => {
     chai
-      .request("http://localhost:3001")
-      .post(`/auth/login`)
-      .send({ username: "thomas" })
-      .end((err, res) => {
-        res.should.have.status(400);
-        res.body.should.have
-          .property("error")
-          .eql("Username and password required");
-        done();
-      });
-  });
-});
-
-describe("/POST invalid registration", () => {
-  it("should return 400", (done) => {
-    chai
-      .request("http://localhost:3001")
+      .request(app)
       .post(`/auth/register`)
       .send({ username: "thomas1", password: "123456" })
       .end((err, res) => {
@@ -113,10 +98,10 @@ describe("/POST invalid registration", () => {
   });
 });
 
-describe("/POST user already exists registration", () => {
-  it("should return 401", (done) => {
+describe("/POST /auth/register", () => {
+  it("should return 401 when user registers with username that already exists", (done) => {
     chai
-      .request("http://localhost:3001")
+      .request(app)
       .post(`/auth/register`)
       .send({
         username: "thomas",
@@ -131,10 +116,10 @@ describe("/POST user already exists registration", () => {
   });
 });
 
-describe("/DELETE logout", () => {
-  it("should return 204", (done) => {
+describe("/DELETE /auth/logout", () => {
+  it("should return 204 when user logs out", (done) => {
     chai
-      .request("http://localhost:3001")
+      .request(app)
       .delete(`/auth/logout`)
       .end((err, res) => {
         res.should.have.status(204);
@@ -143,24 +128,12 @@ describe("/DELETE logout", () => {
   });
 });
 
-describe("/GET user", () => {
-  it("should return 200", (done) => {
+describe("/GET /auth/user", () => {
+  it("should return 200 when user information is retrieved", (done) => {
     chai
-      .request("http://localhost:3001")
+      .request(app)
       .get(`/auth/user`)
       .set("user", {})
-      .end((err, res) => {
-        res.should.have.status(200);
-        done();
-      });
-  });
-});
-
-describe("/GET missing user", () => {
-  it("should return 200", (done) => {
-    chai
-      .request("http://localhost:3001")
-      .get(`/auth/user`)
       .end((err, res) => {
         res.should.have.status(200);
         done();

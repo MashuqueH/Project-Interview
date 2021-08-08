@@ -1,10 +1,9 @@
 const chai = require("chai");
 const seed = require("../db/seed");
+const app = require("../bin/www");
 
 chai.should();
 chai.expect;
-
-const url = "http://localhost:3001";
 
 describe("message", function () {
   let user = null;
@@ -13,7 +12,7 @@ describe("message", function () {
   before(async function () {
     await seed();
     const res = await chai
-      .request(url)
+      .request(app)
       .post(`/auth/login`)
       .send({ username: "santiago", password: "123456" });
 
@@ -21,14 +20,10 @@ describe("message", function () {
     token = res.body.token;
   });
 
-  after(async function () {
-    await seed();
-  });
-
-  describe("/POST missing token", () => {
-    it("should return 401", (done) => {
+  describe("/POST /api/messages", () => {
+    it("should return 401 when a messenger-token is not provided", (done) => {
       chai
-        .request(url)
+        .request(app)
         .post("/api/messages")
         .end((err, res) => {
           res.should.have.status(401);
@@ -37,10 +32,10 @@ describe("message", function () {
     });
   });
 
-  describe("/POST missing body", () => {
-    it("should return 500", (done) => {
+  describe("/POST /api/messages", () => {
+    it("should return 500 when user does not provide a body for the request", (done) => {
       chai
-        .request(url)
+        .request(app)
         .post("/api/messages")
         .set("x-access-token", token)
         .end((err, res) => {
@@ -50,10 +45,10 @@ describe("message", function () {
     });
   });
 
-  describe("/POST user does not belong to conversation", () => {
-    it("should return 403", (done) => {
+  describe("/POST /api/messages", () => {
+    it("should return 403 when user does not belong to the provided conversation", (done) => {
       chai
-        .request(url)
+        .request(app)
         .post("/api/messages")
         .send({
           recipientId: 3,
@@ -68,10 +63,10 @@ describe("message", function () {
     });
   });
 
-  describe("/POST user does belong to conversation", () => {
-    it("should return 200", (done) => {
+  describe("/POST /api/messages", () => {
+    it("should return 200 when user does belong to the provided conversation", (done) => {
       chai
-        .request(url)
+        .request(app)
         .post("/api/messages")
         .send({
           recipientId: 1,
@@ -90,10 +85,10 @@ describe("message", function () {
     });
   });
 
-  describe("/PATCH read messages", () => {
-    it("should return 200", (done) => {
+  describe("/PATCH /api/read/messages", () => {
+    it("should return 200 when the user reads unread messages", (done) => {
       chai
-        .request(url)
+        .request(app)
         .patch("/api/messages/read")
         .set("x-access-token", token)
         .send({
@@ -110,10 +105,10 @@ describe("message", function () {
     });
   });
 
-  describe("/PATCH read messages invalid conversation", () => {
-    it("should return 403", (done) => {
+  describe("/PATCH /api/messages/read", () => {
+    it("should return 403 when user provides an invalid conversation id", (done) => {
       chai
-        .request(url)
+        .request(app)
         .patch("/api/messages/read")
         .set("x-access-token", token)
         .send({

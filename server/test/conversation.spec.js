@@ -1,11 +1,10 @@
 const { assert, expect } = require("chai");
 const chai = require("chai");
 const seed = require("../db/seed");
+const app = require("../bin/www");
 
 chai.should();
 chai.expect;
-
-const url = "http://localhost:3001";
 
 describe("conversations", function () {
   let user = null;
@@ -14,7 +13,7 @@ describe("conversations", function () {
   before(async function () {
     await seed();
     const res = await chai
-      .request(url)
+      .request(app)
       .post(`/auth/login`)
       .send({ username: "santiago", password: "123456" });
 
@@ -22,14 +21,10 @@ describe("conversations", function () {
     token = res.body.token;
   });
 
-  after(async function () {
-    await seed();
-  });
-
-  describe("/GET missing token", () => {
-    it("should return 401", (done) => {
+  describe("/GET /api/conversations", () => {
+    it("should return 401 when messenger token is missing", (done) => {
       chai
-        .request(url)
+        .request(app)
         .get("/api/conversations")
         .end((err, res) => {
           res.should.have.status(401);
@@ -38,13 +33,15 @@ describe("conversations", function () {
     });
   });
 
-  describe("/GET conversations", () => {
-    it("should return 500", (done) => {
+  describe("/GET /api/conversations", () => {
+    it("should return 200 when user retrieves their conversations", (done) => {
       chai
-        .request(url)
+        .request(app)
         .get("/api/conversations")
         .set("x-access-token", token)
         .end((err, res) => {
+          res.should.have.status(200);
+
           assert.equal(res.body.length, 2);
           const convo1 = res.body[0];
           const convo2 = res.body[1];
